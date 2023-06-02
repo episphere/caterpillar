@@ -38,31 +38,65 @@ function ui(div){
         if(temperatureNum.value<0){temperatureNum.value=0}
         temperatureRange.value=temperatureNum.value
     }
-    msgSegment(div)
+    addSegmentTo(div)
     return div
 }
 
-function msgSegment(div, role='system',txt='You are a helpful assistant'){
+function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
     let id=crypto.randomUUID()
-    msgs.push({
-        role:role,
-        content:txt,
-        id:id
-    })
-    let di=document.createElement('div')
-    di.contentEditable=true
-    di.style.marginTop='20px'
-    di.style.border='solid'
-    di.style.borderWidth='1px'
-    di.style.padding='20px'
-    di.style.width=div.clientWidth
-    di.textContent=txt
-    if(role=='system'){
-        di.style.color='maroon'
-    }else{
-        
+    let seg=document.createElement('div')
+    seg.role=role
+    seg.txt=txt
+    seg.contentEditable=true
+    seg.style.marginTop='20px'
+    seg.style.border='solid'
+    seg.style.borderWidth='1px'
+    seg.style.padding='20px'
+    seg.style.width=div.clientWidth
+    //seg.textContent=`${msgs.length}) ${txt}`
+    seg.textContent=txt
+    switch(role) {
+      case 'system':
+        seg.style.color='maroon'
+        break;
+      case 'user':
+        seg.style.color='blue'
+        break;
+      case 'assistant':
+        seg.style.color='green'
+        break;
+      default:
+        error('role not found')
     }
-    div.appendChild(di)
+    
+    seg.onkeyup= async function(evt){
+        if((!evt.shiftKey)&(evt.keyCode==13)){
+            seg.contentEditable=false
+            seg.textContent=`${msgs.length}) ${seg.txt}`
+            if(role!=='user'){
+                addSegmentTo(div,'user','u r a user')
+            }else{
+                let segi = await addSegmentTo(div,'assistant','...')
+                //debugger
+            }
+            msgs.push({
+                role:role,
+                content:txt
+            })
+            console.log(msgs)
+        }
+    }
+    div.appendChild(seg)
+    seg.focus()
+    // --- move cursor to the end of segment
+    let range = document.createRange()
+    range.selectNodeContents(seg)
+    range.collapse(false)
+    let selection = window.getSelection()
+    selection.removeAllRanges()
+    selection.addRange(range)
+    // ---
+    return seg
 }
 
 ui()
