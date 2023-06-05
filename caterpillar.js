@@ -73,16 +73,21 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
         if((!evt.shiftKey)&(evt.keyCode==13)){
             seg.contentEditable=false
             seg.textContent=`${msgs.length}) ${seg.txt}`
-            if(role!=='user'){
-                addSegmentTo(div,'user','u r a user')
-            }else{
-                let segi = await addSegmentTo(div,'assistant','...')
-                //debugger
-            }
             msgs.push({
                 role:role,
                 content:txt
             })
+            if(role!=='user'){
+                let segUser = addSegmentTo(div,'user','u r a user')
+                //debugger
+            }else{
+                let segAssistant = await addSegmentTo(div,'assistant','...')
+                segAssistant.contentEditable=false
+                let res = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'assistant',parseFloat(div.querySelector('#temperatureNum').value))
+                segAssistant.textContent=res.choices[0].message.content
+                console.log(msgs,res)
+                //debugger
+            }
             console.log(msgs)
         }
     }
