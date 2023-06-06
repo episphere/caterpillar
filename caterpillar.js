@@ -53,6 +53,9 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
     seg.style.borderWidth='1px'
     seg.style.padding='20px'
     seg.style.width=div.clientWidth
+    div.onresize=function(){
+        return Math.min(div.clientWidth,200)
+    }
     //seg.textContent=`${msgs.length}) ${txt}`
     seg.textContent=txt
     switch(role) {
