@@ -2,6 +2,16 @@ console.log(`${location.origin}gpt/min.js imported\n${Date()}`)
 
 import * as min from '../gpt/min.js';
 
+function txt2innerHTML(div){
+    let h = div.innerHTML
+    //if(txt[0]=='<'){ // html
+    //    return txt
+    //}else{
+    //    return '<p>'+txt.replaceAll('\n','<br>')+'</p>'
+    //}
+    div.innerHTML=h
+}
+
 let msgs = []
 
 function ui(div){
@@ -75,22 +85,38 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
     seg.onkeyup= async function(evt){
         if((!evt.shiftKey)&(evt.keyCode==13)){
             seg.contentEditable=false
+            seg.txt=seg.textContent
             seg.textContent=`${msgs.length}) ${seg.txt}`
             msgs.push({
                 role:role,
-                content:txt
+                content:seg.txt
             })
-            if(role!=='user'){
-                let segUser = addSegmentTo(div,'user','u r a user')
+            if(role!=='user'){ // not a user --> become a user
+                let segUser = addSegmentTo(div,'user','')
                 //debugger
-            }else{
+            }else{ // a user, ask the assistant
                 let segAssistant = await addSegmentTo(div,'assistant','...')
                 segAssistant.contentEditable=false
-                let res = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'assistant',parseFloat(div.querySelector('#temperatureNum').value))
-                segAssistant.textContent=res.choices[0].message.content
-                console.log(msgs,res)
+                let res = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value))
+                let resContent=res.choices[0].message.content
+                console.log(res)
+                if(resContent[0]=='{'){
+                    resContent=JSON.parse(resContent).content
+                } else if(resContent[0]=='['){
+                    resContent=JSON.parse(resContent)[0].content
+                }
+                segAssistant.textContent=`${msgs.length}) ${resContent}`
+                msgs.push({
+                    role:'assistant',
+                    content:resContent
+                })
+                segAssistant.txt=resContent
+                //console.log(msgs)
+                txt2innerHTML(segAssistant)
+                let segUser = addSegmentTo(div,'user','')
                 //debugger
             }
+            //txt2innerHTML(seg)
             console.log(msgs)
         }
     }
