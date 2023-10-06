@@ -13,6 +13,7 @@ function txt2innerHTML(div){
 }
 
 let msgs = []
+let functionsImport = {}
 
 function ui(div){
     if(!div){
@@ -35,7 +36,7 @@ function ui(div){
             opt.value=opt.textContent=x.id
             model.appendChild(opt)
         })
-        model.value='gpt-3.5-turbo'
+        model.value='gpt-3.5-turbo-16k-0613'
     })
     // select temperatureNum
     let temperatureNum=div.querySelector('#temperatureNum')
@@ -93,11 +94,11 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
             })
             if(role!=='user'){ // not a user --> become a user
                 let segUser = addSegmentTo(div,'user','')
-                //debugger
+                debugger
             }else{ // a user, ask the assistant
                 let segAssistant = await addSegmentTo(div,'assistant','...')
                 segAssistant.contentEditable=false
-                let res = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value))
+                let res = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value),'https://episphere.github.io/gpt/functions/testFunctions.mjs')
                 let resContent=res.choices[0].message.content
                 console.log(res)
                 if(resContent[0]=='{'){
@@ -113,7 +114,13 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
                 segAssistant.txt=resContent
                 //console.log(msgs)
                 txt2innerHTML(segAssistant)
-                let segUser = addSegmentTo(div,'user','')
+                if(res.choices[0].finish_reason=='function_call'){
+                    //let resFun = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value))
+                    let segUser = addSegmentTo(div,'assistant','')
+                } else {
+                    let segUser = addSegmentTo(div,'user','')
+                }
+                //let segUser = addSegmentTo(div,'user','')
                 //debugger
             }
             //txt2innerHTML(seg)
