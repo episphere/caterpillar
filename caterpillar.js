@@ -56,6 +56,7 @@ function ui(div){
 function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
     let id=crypto.randomUUID()
     let seg=document.createElement('div')
+    seg.classList.add("segDiv") // segment div
     seg.role=role
     seg.txt=txt
     seg.contentEditable=true
@@ -94,7 +95,7 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
             })
             if(role!=='user'){ // not a user --> become a user
                 let segUser = addSegmentTo(div,'user','')
-                debugger
+                //debugger
             }else{ // a user, ask the assistant
                 let segAssistant = await addSegmentTo(div,'assistant','...')
                 segAssistant.contentEditable=false
@@ -115,8 +116,35 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
                 //console.log(msgs)
                 txt2innerHTML(segAssistant)
                 if(res.choices[0].finish_reason=='function_call'){
-                    //let resFun = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value))
-                    let segUser = addSegmentTo(div,'assistant','')
+                    let lastDiv = [...div.querySelectorAll('.segDiv')].slice(-2,-1)[0] // 2nd to last, to be moved to last div
+                    let newLastDiv = Object.assign(lastDiv)
+                    lastDiv.parentElement.removeChild(lastDiv) // remove lastDiv (assistant)
+                    div.appendChild(newLastDiv) // put its copy back at the end (now last segDiv is user)
+                    // reorder messages
+                    let oldLastMsg = msgs.pop()
+                    let newLastMsg = msgs.pop()
+                    msgs.push(oldLastMsg)
+                    msgs.push(newLastMsg)
+                    // go back to completions without functions
+                    let newSegAssistant = await addSegmentTo(div,'assistant','...')
+                    newSegAssistant.contentEditable=false
+                    let newRes = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value)) // ,'https://episphere.github.io/gpt/functions/testFunctions.mjs'
+                    let newResContent=newRes.choices[0].message.content
+                    console.log(newRes)
+                    if(newResContent[0]=='{'){
+                        newResContent=JSON.parse(newResContent).content
+                    } else if(newResContent[0]=='['){
+                        newResContent=JSON.parse(newResContent)[0].content
+                    }
+                    newSegAssistant.textContent=`${msgs.length}) ${newResContent}`
+                    msgs.push({
+                        role:'assistant',
+                        content:newResContent
+                    })
+                    newSegAssistant.txt=newResContent
+                    let segUser = addSegmentTo(div,'user','')
+                    
+                    4
                 } else {
                     let segUser = addSegmentTo(div,'user','')
                 }
