@@ -1,15 +1,12 @@
 console.log(`${location.origin}gpt/min.js imported\n${Date()}`)
 
 import * as min from '../gpt/min.js';
+import showdown from 'https://cdn.jsdelivr.net/npm/showdown@2.1.0/+esm'  // markdown>html
 
 function txt2innerHTML(div){
     let h = div.innerHTML
-    //if(txt[0]=='<'){ // html
-    //    return txt
-    //}else{
-    //    return '<p>'+txt.replaceAll('\n','<br>')+'</p>'
-    //}
-    div.innerHTML=h
+    let cv = new showdown.Converter({})
+    div.innerHTML=cv.makeHtml(h)
 }
 
 let msgs = []
@@ -100,6 +97,7 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
                 let segAssistant = await addSegmentTo(div,'assistant','...')
                 segAssistant.contentEditable=false
                 let res = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value),'https://episphere.github.io/gpt/functions/testFunctions.mjs')
+                //let res = await min.completions(JSON.stringify(msgs),div.querySelector('#model').value,'user',parseFloat(div.querySelector('#temperatureNum').value),'http://localhost:8000/gpt/functions/testFunctions.mjs')
                 let resContent=res.choices[0].message.content
                 console.log(res)
                 if(resContent[0]=='{'){
