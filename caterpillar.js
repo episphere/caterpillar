@@ -65,6 +65,9 @@ function addSegmentTo(div, role='system',txt='You are a helpful assistant'){
     div.onresize=function(){
         return Math.min(div.clientWidth,200)
     }
+    div.parentElement.onresize=function(){
+        return Math.min(div.clientWidth,200)
+    }
     //seg.textContent=`${msgs.length}) ${txt}`
     seg.textContent=txt
     switch(role) {
